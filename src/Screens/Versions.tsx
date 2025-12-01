@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import bgvid from "../assets/giff/bg.webm";
+import bgimage from "../assets/sheet/touch screen samama v2 copy.jpg"
 import ver1 from "../assets/giff/SAMAMA.gif";
 import ver2 from "../assets/giff/SAMAMA V.2.gif";
 import { useDispatch, useSelector } from "react-redux";
@@ -59,7 +60,11 @@ const Versions = () => {
   };
 
   return (
-    <div className="relative w-full h-screen bg-cover bg-center overflow-hidden">
+    <div className="relative w-full h-screen bg-cover bg-center overflow-hidden"
+     // style={{
+      //   backgroundImage: `url(${bgimage})`,
+      // }}
+    >
       <video
         className="fixed inset-0 w-full h-full object-cover -z-10"
         src={bgvid}

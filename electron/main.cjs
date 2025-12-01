@@ -18,7 +18,8 @@ let externalWindow = null;
 
 // keep current external state in main process
 let currentLang = "en";
-let currentTarget = "v1"; // default
+// 🆕 allow null for default/intro content
+let currentTarget = null; // "v1" | "v2" | "services" | "impact" | null
 
 function createMainWindow() {
   const win = new BrowserWindow({
@@ -73,7 +74,7 @@ function createExternalWindow() {
     if (!externalWindow || externalWindow.isDestroyed()) return;
     externalWindow.webContents.send("init-external", {
       lang: currentLang,
-      target: currentTarget,
+      target: currentTarget, // can be null → renderer shows default intro
     });
   });
 
@@ -107,10 +108,14 @@ function registerShortcuts() {
 
 /* ============ IPC ============ */
 
-// open or create the external window for any target (v1/v2)
+// open or create the external window for any target (v1/v2/services/impact/null)
 ipcMain.on("open-external-window", (_event, payload) => {
   const { target, lang } = payload || {};
-  if (target) currentTarget = target;
+
+  // allow null (back to intro) or specific target
+  if (typeof target !== "undefined") {
+    currentTarget = target;
+  }
   if (lang) currentLang = lang;
 
   createExternalWindow();
@@ -126,7 +131,10 @@ ipcMain.on("focus-external-window", () => {
 // update target/lang if external window is already open
 ipcMain.on("update-external", (_event, payload) => {
   const { target, lang } = payload || {};
-  if (target) currentTarget = target;
+
+  if (typeof target !== "undefined") {
+    currentTarget = target; // can be null or "v1"/"v2"/"services"/"impact"
+  }
   if (lang) currentLang = lang;
 
   if (externalWindow && !externalWindow.isDestroyed()) {
@@ -150,11 +158,13 @@ ipcMain.on("request-external-state", (event) => {
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   mainWindow = createMainWindow();
+  createExternalWindow(); // 🆕 external window always opened on start
   registerShortcuts();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createMainWindow();
+      createExternalWindow();
     }
   });
 });

@@ -2,25 +2,31 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-
 import v1eng from "./assets/eng/samama eng.webm";
 import v1arb from "./assets/arb/samama arb.webm";
 import v2eng from "./assets/eng/SAMAMA v2.0 eng.webm";
 import v2arb from "./assets/arb/SAMAMA v2.0 arb.webm";
 import servicesEng from "./assets/eng/SAMAMA Services eng.webm";
 import servicesArb from "./assets/arb/SAMAMA Services arb.webm";
-
-// 👇 NEW: Impact videos
 import impactEng from "./assets/eng/SAMAMA Impact eng.webm";
 import impactArb from "./assets/arb/SAMAMA Impact arb.webm";
-import { setLanguage, setWindowTarget, type ExternalTarget, type LangType } from "./Redux/externalWindowSlice";
-import type { AppDispatch, RootState } from "./store";
 
+import defaultVidEng from "./assets/eng/intro eng.webm";
+import defaultVidArb from "./assets/arb/intro arb.webm";
+
+import {
+  setLanguage,
+  setWindowTarget,
+  type ExternalTarget,
+  type LangType,
+} from "./Redux/externalWindowSlice";
+import type { AppDispatch, RootState } from "./store";
 
 declare const window: Window & typeof globalThis;
 
 type VideoConfig = { id: string; src: string };
 
+// 🔹 Normal content videos by target + lang
 const VIDEO_BY_TARGET_LANG: Record<
   Exclude<ExternalTarget, null>,
   Record<LangType, VideoConfig>
@@ -37,11 +43,16 @@ const VIDEO_BY_TARGET_LANG: Record<
     en: { id: "services-en", src: servicesArb },
     ar: { id: "services-ar", src: servicesEng },
   },
-  // 👇 NEW Impact target
   impact: {
-    en: { id: "impact-en", src: impactArb },
+    en: { id: "impact-en", src:  impactArb},
     ar: { id: "impact-ar", src: impactEng },
   },
+};
+
+// 🔹 Default intro video when no specific content is selected (target = null)
+const DEFAULT_VIDEO_BY_LANG: Record<LangType, VideoConfig> = {
+  en: { id: "default-en", src: defaultVidArb },
+  ar: { id: "default-ar", src: defaultVidEng },
 };
 
 const ExternalWindow = () => {
@@ -52,8 +63,13 @@ const ExternalWindow = () => {
     (state: RootState) => state.externalWindow.target
   );
 
-  const safeTarget: Exclude<ExternalTarget, null> = target ?? "v1";
-  const { id, src } = VIDEO_BY_TARGET_LANG[safeTarget][lang];
+  // Decide which video to show
+  const currentVideo: VideoConfig =
+    target === null
+      ? DEFAULT_VIDEO_BY_LANG[lang]
+      : VIDEO_BY_TARGET_LANG[target][lang];
+
+  const { id, src } = currentVideo;
 
   useEffect(() => {
     if (!window.electronAPI) return;
@@ -62,27 +78,39 @@ const ExternalWindow = () => {
       lang?: LangType;
       target?: ExternalTarget;
     }) => {
-      if (payload?.lang) dispatch(setLanguage(payload.lang));
-      if (payload?.target) dispatch(setWindowTarget(payload.target));
+      if (payload?.lang) {
+        dispatch(setLanguage(payload.lang));
+      }
+
+      // target CAN be null, so we must check with typeof
+      if (typeof payload?.target !== "undefined") {
+        dispatch(setWindowTarget(payload.target));
+      }
     };
 
     const handleUpdate = (payload?: {
       lang?: LangType;
       target?: ExternalTarget;
     }) => {
-      if (payload?.lang) dispatch(setLanguage(payload.lang));
-      if (payload?.target) dispatch(setWindowTarget(payload.target));
+      if (payload?.lang) {
+        dispatch(setLanguage(payload.lang));
+      }
+      if (typeof payload?.target !== "undefined") {
+        dispatch(setWindowTarget(payload.target));
+      }
     };
 
     window.electronAPI.receive("init-external", handleInit);
     window.electronAPI.receive("update-external", handleUpdate);
+
+    // ask main for current state (lang + target) when we mount
     window.electronAPI.send("request-external-state");
   }, [dispatch]);
 
   return (
     <div className="relative w-full h-screen bg-cover bg-center overflow-hidden">
       <video
-        key={id}
+        key={id} // key changes when lang or target (or default/content) changes → re-mounts video
         className="fixed inset-0 w-full h-full object-cover -z-10"
         src={src}
         autoPlay

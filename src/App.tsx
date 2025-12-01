@@ -142,6 +142,12 @@ const App = () => {
           "
         />
       </button>
+         <button
+        className="absolute top-[23%] left-[35%] w-145 h-50 bg-transparent"
+        onClick={() => handleOpenExternal(null)}
+      >
+       
+      </button>
     </div>
   );
 };
