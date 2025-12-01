@@ -26,7 +26,7 @@ declare const window: Window & typeof globalThis;
 
 type VideoConfig = { id: string; src: string };
 
-// 🔹 Normal content videos by target + lang
+// Normal content videos
 const VIDEO_BY_TARGET_LANG: Record<
   Exclude<ExternalTarget, null>,
   Record<LangType, VideoConfig>
@@ -44,12 +44,12 @@ const VIDEO_BY_TARGET_LANG: Record<
     ar: { id: "services-ar", src: servicesEng },
   },
   impact: {
-    en: { id: "impact-en", src:  impactArb},
+    en: { id: "impact-en", src: impactArb },
     ar: { id: "impact-ar", src: impactEng },
   },
 };
 
-// 🔹 Default intro video when no specific content is selected (target = null)
+// Default intro when target === null
 const DEFAULT_VIDEO_BY_LANG: Record<LangType, VideoConfig> = {
   en: { id: "default-en", src: defaultVidArb },
   ar: { id: "default-ar", src: defaultVidEng },
@@ -63,7 +63,7 @@ const ExternalWindow = () => {
     (state: RootState) => state.externalWindow.target
   );
 
-  // Decide which video to show
+  // Decide what to show
   const currentVideo: VideoConfig =
     target === null
       ? DEFAULT_VIDEO_BY_LANG[lang]
@@ -82,7 +82,7 @@ const ExternalWindow = () => {
         dispatch(setLanguage(payload.lang));
       }
 
-      // target CAN be null, so we must check with typeof
+      // important: target can be null, so we must guard with typeof
       if (typeof payload?.target !== "undefined") {
         dispatch(setWindowTarget(payload.target));
       }
@@ -103,14 +103,14 @@ const ExternalWindow = () => {
     window.electronAPI.receive("init-external", handleInit);
     window.electronAPI.receive("update-external", handleUpdate);
 
-    // ask main for current state (lang + target) when we mount
+    // ask main for current (lang, target) when we mount
     window.electronAPI.send("request-external-state");
   }, [dispatch]);
 
   return (
     <div className="relative w-full h-screen bg-cover bg-center overflow-hidden">
       <video
-        key={id} // key changes when lang or target (or default/content) changes → re-mounts video
+        key={id}
         className="fixed inset-0 w-full h-full object-cover -z-10"
         src={src}
         autoPlay

@@ -1,7 +1,7 @@
 // src/App.tsx
 import React from "react";
 import bgvid from "./assets/giff/bg.webm";
-import bgimage from "./assets/sheet/touch screen eng copy.jpg";
+// import bgimage from "./assets/sheet/touch screen eng copy.jpg";
 import m1 from "./assets/giff/Samama versions.gif";
 import m2 from "./assets/giff/Samama services.gif";
 import m3 from "./assets/giff/Samama impact.gif";
@@ -19,7 +19,6 @@ import {
   setWindowTarget,
   type ExternalTarget,
 } from "./Redux/externalWindowSlice";
-import UpdateBanner from "./updateBanner";
 
 declare const window: Window & typeof globalThis;
 
@@ -32,18 +31,35 @@ const App = () => {
     (state: RootState) => state.externalWindow
   );
 
+  // ✅ ONLY change local Redux lang. No IPC, no external updates here.
   const toggleLang = () => {
     dispatch(toggleLangAction());
   };
 
-  // 🔁 generic: open/update the ONE external window for any target (v1, v2, services,…)
+  // 🔁 Open/update the ONE external window for any target (v1, v2, services, impact, null)
   const handleOpenExternal = (nextTarget: ExternalTarget) => {
     if (!window.electronAPI) return;
 
     // external window already open
     if (isOpen) {
-      // same target + same lang → just focus
-      if (target === nextTarget && windowLang === lang) {
+      const sameTarget = target === nextTarget;
+      const sameLang = windowLang === lang;
+
+      // 🟢 SPECIAL CASE: reset to default (nextTarget === null)
+      // Always force default intro, even if we are already on null
+      if (nextTarget === null) {
+        dispatch(setWindowTarget(null));
+        dispatch(setWindowLang(lang));
+
+        window.electronAPI.send("update-external", {
+          target: null,
+          lang, // use CURRENT selected lang at the time of click
+        });
+        return;
+      }
+
+      // Normal behavior for non-null targets (v1, v2, services, impact)
+      if (sameTarget && sameLang) {
         window.electronAPI.send("focus-external-window");
         return;
       }
@@ -58,7 +74,7 @@ const App = () => {
       return;
     }
 
-    // external window not open yet → open with target + lang
+    // external window NOT open yet → open with target + lang (target can be null)
     dispatch(openExternalWindow({ target: nextTarget, lang }));
     window.electronAPI.send("open-external-window", {
       target: nextTarget,
@@ -69,9 +85,7 @@ const App = () => {
   return (
     <div
       className="relative w-full h-screen bg-cover bg-center overflow-hidden"
-      // style={{
-      //   backgroundImage: `url(${bgimage})`,
-      // }}
+      // style={{ backgroundImage: `url(${bgimage})` }}
     >
       {/* Background video */}
       <video
@@ -81,8 +95,8 @@ const App = () => {
         loop
         muted
       />
-<div className="z-10"><UpdateBanner/></div>
-      {/* Lang toggle */}
+
+      {/* Lang toggle (ONLY UI & redux, no external change) */}
       <button
         onClick={toggleLang}
         className="
@@ -104,7 +118,7 @@ const App = () => {
         <span className="text-lg">{lang === "en" ? "English" : "عربي"}</span>
       </button>
 
-      {/* m1 button → still internal route (versions) */}
+      {/* m1 button → internal route (versions) */}
       <button
         className="absolute top-[54%] left-[10%]"
         onClick={() => navigate("/versions")}
@@ -116,7 +130,7 @@ const App = () => {
         />
       </button>
 
-      {/* m2 button → open ONE external window with target = 'services' */}
+      {/* m2 button → external 'services' */}
       <button
         className="absolute top-[54%] left-[38%]"
         onClick={() => handleOpenExternal("services")}
@@ -128,6 +142,7 @@ const App = () => {
         />
       </button>
 
+      {/* m3 button → external 'impact' */}
       <button
         className="absolute top-[54%] left-[65%]"
         onClick={() => handleOpenExternal("impact")}
@@ -143,11 +158,13 @@ const App = () => {
           "
         />
       </button>
-         <button
+
+      {/* Transparent hot area → show DEFAULT intro (target = null) in CURRENT lang */}
+      <button
         className="absolute top-[23%] left-[35%] w-145 h-50 bg-transparent"
         onClick={() => handleOpenExternal(null)}
       >
-       
+        {/* empty, just a clickable region */}
       </button>
     </div>
   );
