@@ -19,6 +19,7 @@ import {
   setWindowTarget,
   type ExternalTarget,
 } from "./Redux/externalWindowSlice";
+import UpdateBanner from "./updateBanner";
 
 declare const window: Window & typeof globalThis;
 
@@ -80,7 +81,7 @@ const App = () => {
         loop
         muted
       />
-
+<div className="z-10"><UpdateBanner/></div>
       {/* Lang toggle */}
       <button
         onClick={toggleLang}

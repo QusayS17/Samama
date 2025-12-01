@@ -7,18 +7,23 @@ const {
   ipcMain,
 } = require("electron");
 const path = require("path");
+const { autoUpdater } = require("electron-updater");
+const log = require("electron-log");
 
+// GPU acceleration tweaks
 app.commandLine.appendSwitch("ignore-gpu-blocklist");
 app.commandLine.appendSwitch("enable-accelerated-video");
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
 
+// Logging
+log.transports.file.level = "info";
+autoUpdater.logger = log;
+
+// MAIN + EXTERNAL WINDOW HANDLING
 let mainWindow = null;
 let externalWindow = null;
-
-// keep current external state in main process
 let currentLang = "en";
-// 🆕 allow null for default/intro content
 let currentTarget = null; // "v1" | "v2" | "services" | "impact" | null
 
 function createMainWindow() {
@@ -63,7 +68,6 @@ function createExternalWindow() {
   });
 
   if (process.env.NODE_ENV === "development") {
-    // 👉 route used by the external window
     externalWindow.loadURL("http://localhost:5173/#/external");
   } else {
     const filePath = path.join(__dirname, "../dist/index.html");
@@ -71,73 +75,72 @@ function createExternalWindow() {
   }
 
   externalWindow.webContents.on("did-finish-load", () => {
-    if (!externalWindow || externalWindow.isDestroyed()) return;
     externalWindow.webContents.send("init-external", {
       lang: currentLang,
-      target: currentTarget, // can be null → renderer shows default intro
+      target: currentTarget,
     });
   });
 
   externalWindow.on("closed", () => {
     externalWindow = null;
-
-    // notify main renderer if you want
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send("external-window-closed");
     }
   });
 }
 
-// shortcuts
-function registerShortcuts() {
-  globalShortcut.register("Shift+F", () => {
-    const focused = BrowserWindow.getFocusedWindow();
-    if (focused) focused.setFullScreen(!focused.isFullScreen());
+// 🔥 AUTO-UPDATER SETUP
+function setupAutoUpdater() {
+  if (!app.isPackaged) {
+    console.log("Skipping autoUpdater in dev mode");
+    return;
+  }
+
+  autoUpdater.autoDownload = true;
+
+  autoUpdater.on("update-available", (info) => {
+    if (mainWindow) mainWindow.webContents.send("update-available", info);
   });
 
-  globalShortcut.register("F12", () => {
-    const focused = BrowserWindow.getFocusedWindow();
-    if (!focused) return;
-    if (focused.webContents.isDevToolsOpened()) {
-      focused.webContents.closeDevTools();
-    } else {
-      focused.webContents.openDevTools();
-    }
+  autoUpdater.on("update-not-available", (info) => {
+    if (mainWindow) mainWindow.webContents.send("update-not-available", info);
   });
+
+  autoUpdater.on("error", (err) => {
+    if (mainWindow)
+      mainWindow.webContents.send("update-error", err?.message || String(err));
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    if (mainWindow)
+      mainWindow.webContents.send("update-download-progress", progress);
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    if (mainWindow) mainWindow.webContents.send("update-downloaded", info);
+  });
+
+  autoUpdater.checkForUpdates();
 }
 
-/* ============ IPC ============ */
-
-// open or create the external window for any target (v1/v2/services/impact/null)
+// IPC ROUTES
 ipcMain.on("open-external-window", (_event, payload) => {
   const { target, lang } = payload || {};
-
-  // allow null (back to intro) or specific target
-  if (typeof target !== "undefined") {
-    currentTarget = target;
-  }
+  if (typeof target !== "undefined") currentTarget = target;
   if (lang) currentLang = lang;
-
   createExternalWindow();
 });
 
-// focus external window
 ipcMain.on("focus-external-window", () => {
-  if (externalWindow && !externalWindow.isDestroyed()) {
-    externalWindow.focus();
-  }
+  if (externalWindow) externalWindow.focus();
 });
 
-// update target/lang if external window is already open
 ipcMain.on("update-external", (_event, payload) => {
   const { target, lang } = payload || {};
-
-  if (typeof target !== "undefined") {
-    currentTarget = target; // can be null or "v1"/"v2"/"services"/"impact"
-  }
+  if (typeof target !== "undefined") currentTarget = target;
   if (lang) currentLang = lang;
 
-  if (externalWindow && !externalWindow.isDestroyed()) {
+  if (externalWindow) {
     externalWindow.webContents.send("update-external", {
       lang: currentLang,
       target: currentTarget,
@@ -145,21 +148,22 @@ ipcMain.on("update-external", (_event, payload) => {
   }
 });
 
-// external window asks for latest state
-ipcMain.on("request-external-state", (event) => {
-  event.sender.send("init-external", {
-    lang: currentLang,
-    target: currentTarget,
-  });
+// Update IPC
+ipcMain.on("check-for-updates", () => {
+  if (app.isPackaged) autoUpdater.checkForUpdates();
 });
 
-/* ========= App lifecycle ========= */
+ipcMain.on("quit-and-install", () => {
+  autoUpdater.quitAndInstall();
+});
 
+// APP LIFECYCLE
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
+
   mainWindow = createMainWindow();
-  createExternalWindow(); // 🆕 external window always opened on start
-  registerShortcuts();
+  createExternalWindow();
+  setupAutoUpdater();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
