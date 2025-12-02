@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import bgvid from "../assets/giff/bg.webm";
 import bgimage from "../assets/sheet/touch screen samama v2 eng copy.jpg"
-import v1arb from "../assets/giff/سامامة.gif"
-import v2arb from "../assets/giff/سامامة  الإصدار 2.gif"
+import v1arb from "../assets/giff/سمامة.gif"
+import v2arb from "../assets/giff/سمامة  الإصدار 2.gif"
 
 import ver1eng from "../assets/giff/SAMAMA.gif";
 import ver2eng from "../assets/giff/SAMAMA V.2.gif";

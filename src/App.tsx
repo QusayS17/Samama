@@ -9,7 +9,7 @@ import m3 from "./assets/giff/Samama impact.gif";
 
 import a1 from "./assets/giff/الأثر.gif";
 import a2 from "./assets/giff/خدمات.gif";
-import a3 from "./assets/giff/اصدارات.gif";
+import a3 from "./assets/giff/سمامة.gif";
 
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";

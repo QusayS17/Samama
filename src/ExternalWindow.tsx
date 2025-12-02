@@ -12,7 +12,7 @@ import impactEng from "./assets/eng/SAMAMA Impact eng.webm";
 import impactArb from "./assets/arb/SAMAMA Impact arb.webm";
 
 import defaultVidEng from "./assets/eng/intro eng.webm";
-import defaultVidArb from "./assets/arb/intro arb.webm";
+import defaultVidArb from "./assets/arb/intro arb 1.webm";
 
 import {
   setLanguage,
