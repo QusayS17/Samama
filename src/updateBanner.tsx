@@ -68,9 +68,7 @@ const UpdateBanner = () => {
         </>
       )}
 
-      {status === "error" && (
-        <span>Error while updating: {error}</span>
-      )}
+    
     </div>
   );
 };
