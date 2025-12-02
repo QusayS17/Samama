@@ -16,7 +16,7 @@ interface ExternalWindowState {
 
 const initialState: ExternalWindowState = {
   lang: "en",
-  isOpen: false,
+  isOpen: true,
   target: null,
   windowLang: null,
 };

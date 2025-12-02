@@ -2,9 +2,12 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import bgvid from "../assets/giff/bg.webm";
-import bgimage from "../assets/sheet/touch screen samama v2 copy.jpg"
-import ver1 from "../assets/giff/SAMAMA.gif";
-import ver2 from "../assets/giff/SAMAMA V.2.gif";
+import bgimage from "../assets/sheet/touch screen samama v2 eng copy.jpg"
+import v1arb from "../assets/giff/سامامة.gif"
+import v2arb from "../assets/giff/سامامة  الإصدار 2.gif"
+
+import ver1eng from "../assets/giff/SAMAMA.gif";
+import ver2eng from "../assets/giff/SAMAMA V.2.gif";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import {
@@ -29,7 +32,8 @@ const Versions = () => {
   const toggleLang = () => {
     dispatch(toggleLangAction());
   };
-
+const ver1Src = lang === "en" ? v1arb : ver1eng;
+  const ver2Src = lang === "en" ? v2arb : ver2eng;
   const handleOpenExternal = (nextTarget: ExternalTarget) => {
     if (!window.electronAPI) return;
 
@@ -111,7 +115,7 @@ const Versions = () => {
         onClick={() => handleOpenExternal("v1")}
       >
         <img
-          src={ver1}
+          src={ver1Src}
           alt="m1"
           className="transition-transform duration-150 ease-out active:scale-95"
         />
@@ -123,7 +127,7 @@ const Versions = () => {
         onClick={() => handleOpenExternal("v2")}
       >
         <img
-          src={ver2}
+          src={ver2Src}
           alt="m2"
           className="transition-transform duration-150 ease-out active:scale-95"
         />

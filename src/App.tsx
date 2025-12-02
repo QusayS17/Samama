@@ -1,13 +1,16 @@
 // src/App.tsx
 import React from "react";
 import bgvid from "./assets/giff/bg.webm";
-// import bgimage from "./assets/sheet/touch screen eng copy.jpg";
+import bgimage from "./assets/sheet/touch screen arab copy.jpg";
+
 import m1 from "./assets/giff/Samama versions.gif";
 import m2 from "./assets/giff/Samama services.gif";
 import m3 from "./assets/giff/Samama impact.gif";
+
 import a1 from "./assets/giff/الأثر.gif";
 import a2 from "./assets/giff/خدمات.gif";
 import a3 from "./assets/giff/اصدارات.gif";
+
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "./store";
@@ -31,40 +34,37 @@ const App = () => {
     (state: RootState) => state.externalWindow
   );
 
-  // ✅ ONLY change local Redux lang. No IPC, no external updates here.
+  // ONLY change local Redux lang. No IPC, no external updates here.
   const toggleLang = () => {
     dispatch(toggleLangAction());
   };
 
-  // 🔁 Open/update the ONE external window for any target (v1, v2, services, impact, null)
+  // Open/update the ONE external window for any target (v1, v2, services, impact, null)
   const handleOpenExternal = (nextTarget: ExternalTarget) => {
     if (!window.electronAPI) return;
 
-    // external window already open
     if (isOpen) {
       const sameTarget = target === nextTarget;
       const sameLang = windowLang === lang;
 
-      // 🟢 SPECIAL CASE: reset to default (nextTarget === null)
-      // Always force default intro, even if we are already on null
+      // SPECIAL CASE: reset to default (nextTarget === null)
       if (nextTarget === null) {
         dispatch(setWindowTarget(null));
         dispatch(setWindowLang(lang));
 
         window.electronAPI.send("update-external", {
           target: null,
-          lang, // use CURRENT selected lang at the time of click
+          lang,
         });
         return;
       }
 
-      // Normal behavior for non-null targets (v1, v2, services, impact)
+      // Normal behavior for non-null targets
       if (sameTarget && sameLang) {
         window.electronAPI.send("focus-external-window");
         return;
       }
 
-      // target or lang changed → update Redux + tell external window
       dispatch(setWindowTarget(nextTarget));
       dispatch(setWindowLang(lang));
       window.electronAPI.send("update-external", {
@@ -118,46 +118,96 @@ const App = () => {
         <span className="text-lg">{lang === "en" ? "English" : "عربي"}</span>
       </button>
 
-      {/* m1 button → internal route (versions) */}
-      <button
-        className="absolute top-[54%] left-[10%]"
-        onClick={() => navigate("/versions")}
-      >
-        <img
-          src={lang === "en" ? a1 : m1}
-          alt="m1"
-          className="transition-transform duration-150 ease-out active:scale-95"
-        />
-      </button>
+      {/* 🔀 Buttons per language */}
+      {lang === "en" ? (
+        <>
+         {/* a1 button */}
+          <button
+            className="absolute top-[54%] left-[10%]"
+            onClick={() => handleOpenExternal("impact")}
+          >
+            <img
+              src={a1}
+              alt="a1"
+              className="transition-transform duration-150 ease-out active:scale-95"
+            />
+          </button>
 
-      {/* m2 button → external 'services' */}
-      <button
-        className="absolute top-[54%] left-[38%]"
-        onClick={() => handleOpenExternal("services")}
-      >
-        <img
-          src={lang === "en" ? a2 : m2}
-          alt="m2"
-          className="transition-transform duration-150 ease-out active:scale-95"
-        />
-      </button>
+          {/* a2 button */}
+          <button
+            className="absolute top-[54%] left-[38%]"
+            onClick={() => handleOpenExternal("services")}
+          >
+            <img
+              src={a2}
+              alt="a2"
+              className="transition-transform duration-150 ease-out active:scale-95"
+            />
+          </button>
 
-      {/* m3 button → external 'impact' */}
-      <button
-        className="absolute top-[54%] left-[65%]"
-        onClick={() => handleOpenExternal("impact")}
-      >
-        <img
-          src={lang === "en" ? a3 : m3}
-          alt="m3"
-          className="
-            transition-transform 
-            duration-150 
-            ease-out 
-            active:scale-95
-          "
-        />
-      </button>
+          {/* a3 button */}
+          <button
+            className="absolute top-[54%] left-[65%]"
+            onClick={() => navigate("/versions")}
+          >
+            <img
+              src={a3}
+              alt="a3"
+              className="
+                transition-transform 
+                duration-150 
+                ease-out 
+                active:scale-95
+              "
+            />
+          </button>
+        
+        </>
+      ) : (
+        <>
+           {/* m1 button */}
+          <button
+            className="absolute top-[54%] left-[10%]"
+             onClick={() => navigate("/versions")}
+          >
+            <img
+              src={m1}
+              alt="m1"
+              className="transition-transform duration-150 ease-out active:scale-95"
+            />
+          </button>
+
+          {/* m2 button */}
+          <button
+            className="absolute top-[54%] left-[38%]"
+            onClick={() => handleOpenExternal("services")}
+          >
+            <img
+              src={m2}
+              alt="m2"
+              className="transition-transform duration-150 ease-out active:scale-95"
+            />
+          </button>
+
+          {/* m3 button */}
+          <button
+            className="absolute top-[54%] left-[65%]"
+            onClick={() => handleOpenExternal("impact")}
+           
+          >
+            <img
+              src={m3}
+              alt="m3"
+              className="
+                transition-transform 
+                duration-150 
+                ease-out 
+                active:scale-95
+              "
+            />
+          </button>
+        </>
+      )}
 
       {/* Transparent hot area → show DEFAULT intro (target = null) in CURRENT lang */}
       <button

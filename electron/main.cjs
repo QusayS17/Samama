@@ -31,7 +31,7 @@ function createMainWindow() {
     width: 1280,
     height: 800,
     icon: path.join(__dirname, "../public/logo.ico"),
-    autoHideMenuBar: false,
+    autoHideMenuBar: true, // 👈 hide toolbar/menu
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -59,7 +59,8 @@ function createExternalWindow() {
     width: 1280,
     height: 800,
     icon: path.join(__dirname, "../public/logo.ico"),
-    autoHideMenuBar: true,
+    autoHideMenuBar: true, // 👈 no menu bar
+    fullscreen: true,      // 👈 start fullscreen for signage
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -75,6 +76,7 @@ function createExternalWindow() {
   }
 
   externalWindow.webContents.on("did-finish-load", () => {
+    if (!externalWindow || externalWindow.isDestroyed()) return;
     externalWindow.webContents.send("init-external", {
       lang: currentLang,
       target: currentTarget,
@@ -123,6 +125,29 @@ function setupAutoUpdater() {
   autoUpdater.checkForUpdates();
 }
 
+// 🔧 GLOBAL SHORTCUTS (fullscreen + reload)
+function registerShortcuts() {
+  // Shift+F → toggle fullscreen on focused window
+  globalShortcut.register("Shift+F", () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+    win.setFullScreen(!win.isFullScreen());
+  });
+
+  // Shift+R → reload focused window
+  globalShortcut.register("Shift+R", () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
+    if (process.env.NODE_ENV === "development") {
+      // dev: ignore cache, quicker for hot changes
+      win.webContents.reloadIgnoringCache();
+    } else {
+      win.webContents.reload();
+    }
+  });
+}
+
 // IPC ROUTES
 ipcMain.on("open-external-window", (_event, payload) => {
   const { target, lang } = payload || {};
@@ -159,11 +184,12 @@ ipcMain.on("quit-and-install", () => {
 
 // APP LIFECYCLE
 app.whenReady().then(() => {
-  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null); // hide app menu globally
 
   mainWindow = createMainWindow();
   createExternalWindow();
   setupAutoUpdater();
+  registerShortcuts();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -175,4 +201,9 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+// cleanup shortcuts
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
