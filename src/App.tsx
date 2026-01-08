@@ -1,15 +1,7 @@
 // src/App.tsx
-import React from "react";
-import bgvid from "./assets/giff/bg.webm";
-import bgimage from "./assets/sheet/touch screen arab copy.jpg";
-
-import m1 from "./assets/giff/Samama versions.gif";
-import m2 from "./assets/giff/Samama services.gif";
-import m3 from "./assets/giff/Samama impact.gif";
-
-import a1 from "./assets/giff/الأثر.gif";
-import a2 from "./assets/giff/خدمات.gif";
-import a3 from "./assets/giff/سمامة.gif";
+import bgvid from "./assets/ECHO/eco touch bg loop.webm";
+import startbtn from "./assets/ECHO/bg buttong.png";
+import bgimage from "./assets/ECHO/bg.png";
 
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -49,7 +41,7 @@ const App = () => {
 
       // SPECIAL CASE: reset to default (nextTarget === null)
       if (nextTarget === null) {
-        dispatch(setWindowTarget(null));
+        // dispatch(setWindowTarget(null));
         dispatch(setWindowLang(lang));
 
         window.electronAPI.send("update-external", {
@@ -85,9 +77,10 @@ const App = () => {
   return (
     <div
       className="relative w-full h-screen bg-cover bg-center overflow-hidden"
-      // style={{ backgroundImage: `url(${bgimage})` }}
+      style={{ backgroundImage: `url(${bgimage})` }}
     >
       {/* Background video */}
+      {/*
       <video
         className="fixed inset-0 w-full h-full object-cover -z-10"
         src={bgvid}
@@ -95,127 +88,54 @@ const App = () => {
         loop
         muted
       />
+      */}
 
-      {/* Lang toggle (ONLY UI & redux, no external change) */}
+      {/* Start Button */}
       <button
-        onClick={toggleLang}
         className="
-          absolute top-20 right-20 z-20
-          flex items-center gap-2
-          px-7 py-4
-          rounded-full
-          bg-white/10
-          backdrop-blur-md
-          shadow-lg shadow-black/30
-          text-xs md:text-sm
-          text-white
-          font-medium
-          hover:bg-white/20
-          active:scale-95
-          transition
+          absolute top-[16%] right-[25%]
+          w-[960px] h-[910px]   /* 👈 EDIT SIZE HERE */
+          flex items-center justify-center
         "
+        onClick={() => handleOpenExternal("start")}
       >
-        <span className="text-lg">{lang === "en" ? "English" : "عربي"}</span>
-      </button>
-
-      {/* 🔀 Buttons per language */}
-      {lang === "en" ? (
-        <>
-         {/* a1 button */}
-          <button
-            className="absolute top-[54%] left-[10%]"
-            onClick={() => handleOpenExternal("impact")}
-          >
-            <img
-              src={a1}
-              alt="a1"
-              className="transition-transform duration-150 ease-out active:scale-95"
-            />
-          </button>
-
-          {/* a2 button */}
-          <button
-            className="absolute top-[54%] left-[38%]"
-            onClick={() => handleOpenExternal("services")}
-          >
-            <img
-              src={a2}
-              alt="a2"
-              className="transition-transform duration-150 ease-out active:scale-95"
-            />
-          </button>
-
-          {/* a3 button */}
-          <button
-            className="absolute top-[54%] left-[65%]"
-            onClick={() => navigate("/versions")}
-          >
-            <img
-              src={a3}
-              alt="a3"
-              className="
-                transition-transform 
-                duration-150 
-                ease-out 
-                active:scale-95
-              "
-            />
-          </button>
-        
-        </>
-      ) : (
-        <>
-           {/* m1 button */}
-          <button
-            className="absolute top-[54%] left-[10%]"
-             onClick={() => navigate("/versions")}
-          >
-            <img
-              src={m1}
-              alt="m1"
-              className="transition-transform duration-150 ease-out active:scale-95"
-            />
-          </button>
-
-          {/* m2 button */}
-          <button
-            className="absolute top-[54%] left-[38%]"
-            onClick={() => handleOpenExternal("services")}
-          >
-            <img
-              src={m2}
-              alt="m2"
-              className="transition-transform duration-150 ease-out active:scale-95"
-            />
-          </button>
-
-          {/* m3 button */}
-          <button
-            className="absolute top-[54%] left-[65%]"
-            onClick={() => handleOpenExternal("impact")}
+        <img
+          src={startbtn}
+          alt="start"
+          className="
+            w-[350px] h-[350px] object-contain
            
-          >
-            <img
-              src={m3}
-              alt="m3"
-              className="
-                transition-transform 
-                duration-150 
-                ease-out 
-                active:scale-95
-              "
-            />
-          </button>
-        </>
-      )}
-
-      {/* Transparent hot area → show DEFAULT intro (target = null) in CURRENT lang */}
-      <button
-        className="absolute top-[23%] left-[35%] w-145 h-50 bg-transparent"
-        onClick={() => handleOpenExternal(null)}
-      >
-        {/* empty, just a clickable region */}
+          "
+        />
       </button>
+      {target === "start" && (
+ <button
+  onClick={() => handleOpenExternal("default")}
+  className="
+    absolute top-[5%] left-[5%]
+    w-[72px] h-[72px]
+    rounded-full
+    bg-white/15 backdrop-blur-md
+    border border-white/30
+    shadow-xl
+    flex items-center justify-center
+    hover:scale-110 hover:bg-white/25
+    active:scale-95
+    transition-all duration-200
+    z-50
+  "
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="white"
+    className="w-8 h-8 opacity-90"
+  >
+    <path d="M15.75 19.5L8.25 12l7.5-7.5" />
+  </svg>
+</button>
+
+)}
     </div>
   );
 };

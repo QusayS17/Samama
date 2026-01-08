@@ -2,22 +2,21 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type LangType = "en" | "ar";
-export type ExternalTarget = "v1" | "v2" | "services" | "impact" | null;
+
+// ✅ only what you need
+export type ExternalTarget = "default" | "start";
 
 interface ExternalWindowState {
-  // 🔤 global language (main UI + what we send to external)
   lang: LangType;
-
-  // 🪟 external Electron window state
   isOpen: boolean;
-  target: ExternalTarget;   // which version is shown in external window
-  windowLang: LangType | null; // last lang used in external window (any version)
+  target: ExternalTarget;
+  windowLang: LangType | null;
 }
 
 const initialState: ExternalWindowState = {
   lang: "en",
-  isOpen: true,
-  target: null,
+  isOpen: true,          // external is already open (as you said)
+  target: "default",     // ✅ show Dfvid at first
   windowLang: null,
 };
 
@@ -25,7 +24,6 @@ const externalWindowSlice = createSlice({
   name: "externalWindow",
   initialState,
   reducers: {
-    // -------- language (main) --------
     toggleLang(state) {
       state.lang = state.lang === "en" ? "ar" : "en";
     },
@@ -33,19 +31,13 @@ const externalWindowSlice = createSlice({
       state.lang = action.payload;
     },
 
-    // -------- external window meta --------
     openExternalWindow(
       state,
-      action: PayloadAction<{
-        target: ExternalTarget;
-        lang?: LangType;
-      }>
+      action: PayloadAction<{ target: ExternalTarget; lang?: LangType }>
     ) {
       state.isOpen = true;
       state.target = action.payload.target;
-      if (action.payload.lang) {
-        state.windowLang = action.payload.lang;
-      }
+      if (action.payload.lang) state.windowLang = action.payload.lang;
     },
 
     setWindowLang(state, action: PayloadAction<LangType>) {
@@ -58,7 +50,7 @@ const externalWindowSlice = createSlice({
 
     closeExternalWindow(state) {
       state.isOpen = false;
-      state.target = null;
+      state.target = "default";
       state.windowLang = null;
     },
   },
