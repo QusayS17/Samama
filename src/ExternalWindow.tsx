@@ -12,7 +12,6 @@ import { setWindowTarget, type ExternalTarget } from "./Redux/externalWindowSlic
 
 declare const window: Window & typeof globalThis;
 
-// ✅ Map every target to its video (scales nicely)
 const videoMap: Record<ExternalTarget, string> = {
   default: Dfvid,
   start: startvid,
@@ -33,28 +32,29 @@ const ExternalWindow = () => {
       }
     };
 
+    // listen for updates from Electron main
     window.electronAPI.receive("update-external", handleUpdate);
+
+    // ask Electron main for the current state on load
     window.electronAPI.send("request-external-state");
 
-    // ✅ optional cleanup (only if your electronAPI supports removing listeners)
+    // optional cleanup if you implement removeListener in preload
     // return () => window.electronAPI?.remove?.("update-external", handleUpdate);
   }, [dispatch]);
 
   const src = videoMap[target] ?? Dfvid;
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
-      <div className="absolute top-0 left-0 w-[1344px] h-[1080px]">
-        <video
-          key={target} // ✅ forces reload when target changes
-          className="w-full h-full object-cover"
-          src={src}
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
-      </div>
+    <div className="fixed inset-0 bg-black overflow-hidden">
+      <video
+        key={target}
+        className="absolute inset-0 w-full h-full object-cover"
+        src={src}
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
     </div>
   );
 };
