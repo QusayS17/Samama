@@ -1,9 +1,10 @@
 // src/App.tsx
 import startbtn from "./assets/start.png";
-import bgimage from "./assets/BG.png";
+import bgimage from "./assets/All.png";
 import Leftbtn from "./assets/map.png";
 import Rightbtn from "./assets/3naser.png";
-import { startApp, resetApp } from "./Redux/funcSlice";
+import { startApp, resetApp, unlockLeft } from "./Redux/funcSlice";
+
 import HomeImage from "./assets/home.png"
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "./store";
@@ -17,7 +18,8 @@ declare const window: Window & typeof globalThis;
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { step } = useSelector((state: RootState) => state.func);
+
+const { step, leftUnlocked } = useSelector((state: RootState) => state.func);
 
   const { isOpen, target } = useSelector(
     (state: RootState) => state.externalWindow,
@@ -79,34 +81,38 @@ const App = () => {
       </button>
 
       {/* Left Button */}
-      {step === "started" && (
-        <button
-          className="
+     {step === "started" && (
+  <button
+    disabled={!leftUnlocked}
+    className={`
       absolute top-[33%] right-[63%]
       w-[420px] h-[420px]
       flex items-center justify-center
       transform-gpu
       animate-fade-in-scale
       delay-120ms
-    "
-          onClick={(e) => {
-            const el = e.currentTarget;
+      transition-all duration-200
+    
+    `}
+    onClick={(e) => {
+      if (!leftUnlocked) return; // extra safety
 
-            // trigger press animation
-            el.classList.remove("animate-press");
-            void el.offsetWidth;
-            el.classList.add("animate-press");
+      const el = e.currentTarget;
+      el.classList.remove("animate-press");
+      void el.offsetWidth;
+      el.classList.add("animate-press");
 
-            handleOpenExternal("left");
-          }}
-        >
-          <img
-            src={Leftbtn}
-            alt="left"
-            className="w-[390px] h-[390px] object-contain pointer-events-none"
-          />
-        </button>
-      )}
+      handleOpenExternal("left");
+    }}
+  >
+    <img
+      src={Leftbtn}
+      alt="left"
+      className="w-[390px] h-[390px] object-contain pointer-events-none"
+    />    
+  </button>
+)}
+
 
       {/* Right Button */}
       {step === "started" && (
@@ -126,7 +132,7 @@ const App = () => {
             el.classList.remove("animate-press");
             void el.offsetWidth;
             el.classList.add("animate-press");
-
+dispatch(unlockLeft());
             handleOpenExternal("right");
           }}
         >
