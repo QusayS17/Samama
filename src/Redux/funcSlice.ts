@@ -1,15 +1,16 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 type UiStep = "initial" | "started";
+type Side = "left" | "right";
 
 interface FuncState {
   step: UiStep;
-  leftUnlocked: boolean;
+  allowed: Side; // ✅ which button is clickable right now
 }
 
 const initialState: FuncState = {
   step: "initial",
-  leftUnlocked: false, // ✅ left locked by default
+  allowed: "right", // ✅ at first: right clickable, left locked
 };
 
 const funcSlice = createSlice({
@@ -18,17 +19,20 @@ const funcSlice = createSlice({
   reducers: {
     startApp(state) {
       state.step = "started";
-      state.leftUnlocked = false; // ✅ every start locks left again
+      state.allowed = "right"; // ✅ reset rule when start
     },
     resetApp(state) {
       state.step = "initial";
-      state.leftUnlocked = false; // ✅ home resets lock
+      state.allowed = "right"; // ✅ reset rule when home
     },
-    unlockLeft(state) {
-      state.leftUnlocked = true; // ✅ right click unlocks left
+
+    // Call this after user clicks a side
+    clicked(state, action: PayloadAction<Side>) {
+      // after clicking one side, allow the other
+      state.allowed = action.payload === "right" ? "left" : "right";
     },
   },
 });
 
-export const { startApp, resetApp, unlockLeft } = funcSlice.actions;
+export const { startApp, resetApp, clicked } = funcSlice.actions;
 export default funcSlice.reducer;

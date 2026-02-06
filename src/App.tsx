@@ -1,9 +1,10 @@
 // src/App.tsx
 import startbtn from "./assets/start.png";
-import bgimage from "./assets/All.png";
+import bgimage from "./assets/BG.png";
 import Leftbtn from "./assets/map.png";
 import Rightbtn from "./assets/3naser.png";
-import { startApp, resetApp, unlockLeft } from "./Redux/funcSlice";
+import { startApp, resetApp, clicked } from "./Redux/funcSlice";
+
 
 import HomeImage from "./assets/home.png"
 import { useDispatch, useSelector } from "react-redux";
@@ -18,36 +19,29 @@ declare const window: Window & typeof globalThis;
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
+const { step, allowed } = useSelector((state: RootState) => state.func);
 
-const { step, leftUnlocked } = useSelector((state: RootState) => state.func);
+const leftEnabled = allowed === "left";
+const rightEnabled = allowed === "right";
+
 
   const { isOpen, target } = useSelector(
     (state: RootState) => state.externalWindow,
   );
 
-  const handleOpenExternal = (nextTarget: ExternalTarget) => {
-    if (!window.electronAPI) return;
+const handleOpenExternal = (nextTarget: ExternalTarget) => {
+  if (!window.electronAPI) return;
 
-    if (isOpen) {
-      const sameTarget = target === nextTarget;
+  if (isOpen) {
+    dispatch(setWindowTarget(nextTarget));
+    window.electronAPI.send("update-external", { target: nextTarget });
+    window.electronAPI.send("focus-external-window");
+    return;
+  }
 
-      if (sameTarget) {
-        window.electronAPI.send("update-external", {
-          target: nextTarget,
-          playId: Date.now(), // ✅ unique every click
-        });
-        window.electronAPI.send("focus-external-window");
-        return;
-      }
-
-      dispatch(setWindowTarget(nextTarget));
-      window.electronAPI.send("update-external", { target: nextTarget });
-      return;
-    }
-
-    dispatch(openExternalWindow({ target: nextTarget }));
-    window.electronAPI.send("open-external-window", { target: nextTarget });
-  };
+  dispatch(openExternalWindow({ target: nextTarget }));
+  window.electronAPI.send("open-external-window", { target: nextTarget });
+};
 
   return (
     <div
@@ -81,9 +75,9 @@ const { step, leftUnlocked } = useSelector((state: RootState) => state.func);
       </button>
 
       {/* Left Button */}
-     {step === "started" && (
+{step === "started" && (
   <button
-    disabled={!leftUnlocked}
+    disabled={!leftEnabled}
     className={`
       absolute top-[33%] right-[63%]
       w-[420px] h-[420px]
@@ -92,16 +86,17 @@ const { step, leftUnlocked } = useSelector((state: RootState) => state.func);
       animate-fade-in-scale
       delay-120ms
       transition-all duration-200
-    
+   
     `}
     onClick={(e) => {
-      if (!leftUnlocked) return; // extra safety
+      if (!leftEnabled) return;
 
       const el = e.currentTarget;
       el.classList.remove("animate-press");
       void el.offsetWidth;
       el.classList.add("animate-press");
 
+      dispatch(clicked("left"));          // ✅ after left click -> right allowed
       handleOpenExternal("left");
     }}
   >
@@ -109,40 +104,50 @@ const { step, leftUnlocked } = useSelector((state: RootState) => state.func);
       src={Leftbtn}
       alt="left"
       className="w-[390px] h-[390px] object-contain pointer-events-none"
-    />    
+    />
+
+    
   </button>
 )}
 
 
+
       {/* Right Button */}
       {step === "started" && (
-        <button
-          className="
+  <button
+    disabled={!rightEnabled}
+    className={`
       absolute top-[33%] left-[63.9%]
       w-[420px] h-[420px]
       flex items-center justify-center
       transform-gpu
       animate-fade-in-scale
       delay-120ms
-    "
-          onClick={(e) => {
-            const el = e.currentTarget;
+      transition-all duration-200
+   
+    `}
+    onClick={(e) => {
+      if (!rightEnabled) return;
 
-            // trigger press animation
-            el.classList.remove("animate-press");
-            void el.offsetWidth;
-            el.classList.add("animate-press");
-dispatch(unlockLeft());
-            handleOpenExternal("right");
-          }}
-        >
-          <img
-            src={Rightbtn}
-            alt="right"
-            className="w-[390px] h-[390px] object-contain pointer-events-none"
-          />
-        </button>
-      )}
+      const el = e.currentTarget;
+      el.classList.remove("animate-press");
+      void el.offsetWidth;
+      el.classList.add("animate-press");
+
+      dispatch(clicked("right"));         // ✅ after right click -> left allowed
+      handleOpenExternal("right");
+    }}
+  >
+    <img
+      src={Rightbtn}
+      alt="right"
+      className="w-[390px] h-[390px] object-contain pointer-events-none"
+    />
+
+  
+  </button>
+)}
+
 
       {/* Back button: show when NOT default */}
       {/* Home button: show when NOT default */}
