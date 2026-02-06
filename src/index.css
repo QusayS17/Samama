@@ -1,1 +1,42 @@
 @import "tailwindcss";
+/* =========================
+   BUTTON CLICK – SCALE DOWN
+   ========================= */
+/* =========================
+   SHOW (FADE IN) ANIMATION
+   ========================= */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 420ms ease-out both;
+  will-change: opacity, transform;
+}
+
+/* Delay utility */
+.delay-120ms {
+  animation-delay: 120ms;
+}
+
+/* =========================
+   CLICK (PRESS) ANIMATION
+   ========================= */
+@keyframes pressScale {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.animate-press {
+  animation: pressScale 180ms ease-out;
+  will-change: transform;
+}
+

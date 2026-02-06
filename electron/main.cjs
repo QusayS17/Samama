@@ -161,17 +161,22 @@ ipcMain.on("focus-external-window", () => {
 });
 
 ipcMain.on("update-external", (_event, payload) => {
-  const { target, lang } = payload || {};
+  const p = payload || {};
+  const { target, lang } = p;
+
   if (typeof target !== "undefined") currentTarget = target;
   if (lang) currentLang = lang;
 
-  if (externalWindow) {
+  if (externalWindow && !externalWindow.isDestroyed()) {
     externalWindow.webContents.send("update-external", {
+      ...p,                 // ✅ forwards playId and anything
       lang: currentLang,
       target: currentTarget,
     });
   }
 });
+
+
 
 // Update IPC
 ipcMain.on("check-for-updates", () => {
