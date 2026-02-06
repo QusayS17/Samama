@@ -58,6 +58,8 @@ const handleOpenExternal = (nextTarget: ExternalTarget) => {
     will-change-transform
     hover:animate-pulse-once
   "
+  disabled={step === "started"}
+
         onClick={(e) => {
           const el = e.currentTarget;
           el.classList.remove("animate-press");
