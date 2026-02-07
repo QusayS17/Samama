@@ -5,12 +5,12 @@ type Side = "left" | "right";
 
 interface FuncState {
   step: UiStep;
-  allowed: Side; // ✅ which button is clickable right now
+  visible: Side | null; // which button is currently shown
 }
 
 const initialState: FuncState = {
   step: "initial",
-  allowed: "right", // ✅ at first: right clickable, left locked
+  visible: null,
 };
 
 const funcSlice = createSlice({
@@ -19,17 +19,16 @@ const funcSlice = createSlice({
   reducers: {
     startApp(state) {
       state.step = "started";
-      state.allowed = "right"; // ✅ reset rule when start
+      state.visible = "right"; // ✅ show right first
     },
     resetApp(state) {
       state.step = "initial";
-      state.allowed = "right"; // ✅ reset rule when home
+      state.visible = null; // ✅ hide both
     },
 
-    // Call this after user clicks a side
+    // when a side is clicked -> show the other side
     clicked(state, action: PayloadAction<Side>) {
-      // after clicking one side, allow the other
-      state.allowed = action.payload === "right" ? "left" : "right";
+      state.visible = action.payload === "right" ? "left" : "right";
     },
   },
 });
